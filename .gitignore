@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 提出記事の貼り付け用ファイル（copy_article.sh が作る）
+/docs/提出記事_貼り付け用.*
