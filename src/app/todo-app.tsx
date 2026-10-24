@@ -55,10 +55,10 @@ export default function TodoApp() {
     );
   }
 
-  // お知らせは4秒で自動的に消す
+  // お知らせは4秒で自動的に消す（「元に戻す」付きのときは押す余裕を見て8秒）
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(null), 4000);
+    const timer = setTimeout(() => setToast(null), toast.undo ? 8000 : 4000);
     return () => clearTimeout(timer);
   }, [toast]);
 
@@ -107,7 +107,7 @@ export default function TodoApp() {
   const remaining = todos.filter((todo) => !todo.done).length;
 
   return (
-    <main className="mx-auto w-full max-w-xl px-4 py-10">
+    <main className="mx-auto w-full max-w-xl px-4 pt-10 pb-32">
       <h1 className="text-2xl font-bold">やることリスト</h1>
       <p className="mt-1 text-base text-zinc-600">
         {todos.length === 0
@@ -125,6 +125,7 @@ export default function TodoApp() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="例：牛乳を買う"
+          maxLength={100}
           className="min-h-12 flex-1 rounded-lg border border-zinc-300 bg-white px-3 text-base focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
         />
         <button
@@ -153,14 +154,14 @@ export default function TodoApp() {
                 {/* 色だけでなく、チェックの形と取り消し線でも完了がわかるようにする */}
                 <span
                   aria-hidden="true"
-                  className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 text-sm font-bold ${
+                  className={`flex size-6 shrink-0 items-center justify-center rounded-md border-2 text-base font-bold ${
                     todo.done ? "border-green-700 bg-green-700 text-white" : "border-zinc-400 bg-white"
                   }`}
                 >
                   {todo.done ? "✓" : ""}
                 </span>
                 <span
-                  className={`text-base break-all ${todo.done ? "text-zinc-500 line-through" : ""}`}
+                  className={`text-base [overflow-wrap:anywhere] ${todo.done ? "text-zinc-500 line-through" : ""}`}
                 >
                   {todo.text}
                 </span>
