@@ -14,15 +14,46 @@ type Toast = {
   undo?: { todo: Todo; index: number };
 };
 
+const STORAGE_KEY = "todo-next:todos";
+
+function loadTodos(): Todo[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? (JSON.parse(saved) as Todo[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveTodos(todos: Todo[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+// localStorage はブラウザにしかないので、この部品は todo-loader.tsx からブラウザ側でだけ表示する
 export default function TodoApp() {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todos, setTodos] = useState<Todo[]>(loadTodos);
   const [text, setText] = useState("");
   const [toast, setToast] = useState<Toast | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 一覧を変えるときは必ずここを通して、画面と localStorage の両方を更新する
+  function updateTodos(next: Todo[], message: Toast) {
+    setTodos(next);
+    setToast(
+      saveTodos(next)
+        ? message
+        : { message: "保存できませんでした。ブラウザの設定を確認してください" },
+    );
+  }
 
   // お知らせは4秒で自動的に消す
   useEffect(() => {
@@ -39,15 +70,19 @@ export default function TodoApp() {
       inputRef.current?.focus();
       return;
     }
-    setTodos((prev) => [{ id: createId(), text: trimmed, done: false }, ...prev]);
+    updateTodos([{ id: createId(), text: trimmed, done: false }, ...todos], {
+      message: "追加しました",
+    });
     setText("");
-    setToast({ message: "追加しました" });
     inputRef.current?.focus();
   }
 
   function toggleTodo(id: string) {
-    setTodos((prev) =>
-      prev.map((todo) => (todo.id === id ? { ...todo, done: !todo.done } : todo)),
+    const target = todos.find((todo) => todo.id === id);
+    if (!target) return;
+    updateTodos(
+      todos.map((todo) => (todo.id === id ? { ...todo, done: !todo.done } : todo)),
+      { message: target.done ? "未完了に戻しました" : "完了にしました" },
     );
   }
 
@@ -55,15 +90,18 @@ export default function TodoApp() {
     const index = todos.findIndex((todo) => todo.id === id);
     if (index === -1) return;
     const todo = todos[index];
-    setTodos((prev) => prev.filter((t) => t.id !== id));
-    setToast({ message: `「${todo.text}」を削除しました`, undo: { todo, index } });
+    updateTodos(
+      todos.filter((t) => t.id !== id),
+      { message: `「${todo.text}」を削除しました`, undo: { todo, index } },
+    );
   }
 
   function undoDelete() {
     if (!toast?.undo) return;
     const { todo, index } = toast.undo;
-    setTodos((prev) => [...prev.slice(0, index), todo, ...prev.slice(index)]);
-    setToast({ message: "元に戻しました" });
+    updateTodos([...todos.slice(0, index), todo, ...todos.slice(index)], {
+      message: "元に戻しました",
+    });
   }
 
   const remaining = todos.filter((todo) => !todo.done).length;

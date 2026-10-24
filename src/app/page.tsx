@@ -1,5 +1,5 @@
-import TodoApp from "./todo-app";
+import TodoLoader from "./todo-loader";
 
 export default function Home() {
-  return <TodoApp />;
+  return <TodoLoader />;
 }
