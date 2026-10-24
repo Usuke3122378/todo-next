@@ -189,7 +189,7 @@ export default function TodoApp() {
               <button
                 type="button"
                 onClick={undoDelete}
-                className="min-h-11 rounded-md px-2 font-bold text-yellow-300 underline"
+                className="min-h-11 shrink-0 whitespace-nowrap rounded-md px-2 font-bold text-yellow-300 underline"
               >
                 元に戻す
               </button>
